@@ -1,0 +1,30 @@
+name: deploy-container
+
+on:
+  # event to watch for
+  push:
+    branches:
+      - main
+    paths:
+      - 'mfa/container/**'
+
+# execution envioronment under which directory
+defaults:
+  run:
+    working-directory: mfa/container
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm install
+      - run: npm run build
+
+      # aws sync with github
+      - uses: chrislennon/action-aws-cli@v1.1
+      - run: aws s3 sync dist s3://${{ secrets.AWS_S3_BUCKET_NAME }}/container/latest
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
